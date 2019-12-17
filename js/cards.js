@@ -136,11 +136,20 @@ function heatmap(dataset_path="data/guangzhou.csv",svg_id = "svg2", class_id = "
         console.log(d3.select(this).attr("opacity"));
         class_name = d3.select(this).attr('class');
         if (d3.select(this).attr("opacity") == 1) {
-            d3.select(this).attr("opacity",0.2);
+            d3.select(this)
+                .transition()
+                .attr("opacity",0.2)
+                .attr("rx",200)
+                .attr("ry",200);
             remove_city_line.push(class_name.split('_')[0] + "_line");
         }
         else{
-            d3.select(this).attr("opacity",1);
+            d3.select(this)
+                .transition()
+                .attr("opacity",1)
+                .attr("rx",10)
+                .attr("ry",10);
+            
             for (var i = 0; i < remove_city_line.length; i++) {
                 if (remove_city_line[i] == class_name.split('_')[0] + "_line") {
                     remove_city_line.splice(i,1);
@@ -226,7 +235,7 @@ function heatmap(dataset_path="data/guangzhou.csv",svg_id = "svg2", class_id = "
 }
 
 
-heatmap("data/beijing.csv","svg2","beijing_card","steelblue","北京");
-heatmap("data/shanghai.csv","svg3","shanghai_card","green","上海");
-heatmap("data/guangzhou.csv","svg4","guangzhou_card","purple","广州");
-heatmap("data/haikou.csv","svg5","haikou_card","orange","海口");
+heatmap("data/beijing.csv","svg2","beijing_card","rgb(23,118,182)","北京");
+heatmap("data/shanghai.csv","svg3","shanghai_card","rgb(36,162,33)","上海");
+heatmap("data/guangzhou.csv","svg4","guangzhou_card","rgb(149,100,191)","广州");
+heatmap("data/haikou.csv","svg5","haikou_card","rgb(115,67,9)","海口");

@@ -93,7 +93,7 @@ function type(d) {
 }
 
 
-function add_data(data, data_index, color = "steelblue"){
+function add_data(data, data_index, color = "rgb(23,118,182)"){
   focus.append("path")
       .attr("id",String(data_index))
       .datum(data)
@@ -113,10 +113,16 @@ function add_data(data, data_index, color = "steelblue"){
       .datum(data)
       .attr("class", "line")
       .attr("d", line2)
-      .attr("opacity",default_opacity)
+      .attr("opacity",function(){
+        if (remove_city_line.indexOf(data_index) != -1) {
+          return 0;
+        }
+        else
+          return default_opacity;
+      })
       .attr("stroke",color);
 }
-function init_data(data, data_index, color = "steelblue"){
+function init_data(data, data_index, color = "rgb(23,118,182)"){
   x.domain(d3.extent(data, function(d) { return new Date(d.date); }));
 
   y.domain([0, d3.max(data, function(d) { return parseFloat(d.price); })]);
@@ -205,21 +211,21 @@ function main(smooth = 0){
 
     data = getData(origin_data,smooth);
 
-    init_data(data, "beijing_line","steelblue");
+    init_data(data, "beijing_line","rgb(23,118,182)");
   });
 
   d3.csv("data/guangzhou.csv").then(function(origin_data)  {
     data = getData(origin_data,smooth);
-    add_data(data, "guangzhou_line","purple");
+    add_data(data, "guangzhou_line","rgb(149,100,191)");
   });
 
   d3.csv("data/shanghai.csv").then(function(origin_data)  {
     data = getData(origin_data,smooth);
-    add_data(data, "shanghai_line","green");
+    add_data(data, "shanghai_line","rgb(36,162,33)");
   });
   d3.csv("data/haikou.csv").then(function(origin_data)  {
     data = getData(origin_data,smooth);
-    add_data(data, "haikou_line","orange");
+    add_data(data, "haikou_line","rgb(115,67,9)");
   });
 }
 
@@ -232,20 +238,20 @@ function change_smooth(smooth){
   remove_data("haikou_line");
   d3.csv("data/beijing.csv").then(function(origin_data)  {
     data = getData(origin_data,smooth);
-    add_data(data, "beijing_line","steelblue");
+    add_data(data, "beijing_line","rgb(23,118,182)");
   });
   d3.csv("data/guangzhou.csv").then(function(origin_data)  {
     data = getData(origin_data,smooth);
-    add_data(data, "guangzhou_line","purple");
+    add_data(data, "guangzhou_line","rgb(149,100,191)");
   });
 
   d3.csv("data/shanghai.csv").then(function(origin_data)  {
     data = getData(origin_data,smooth);
-    add_data(data, "shanghai_line","green");
+    add_data(data, "shanghai_line","rgb(36,162,33)");
   });
   d3.csv("data/haikou.csv").then(function(origin_data)  {
     data = getData(origin_data,smooth);
-    add_data(data, "haikou_line","orange");
+    add_data(data, "haikou_line","rgb(115,67,9)");
   });
 
 }
