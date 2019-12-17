@@ -4,9 +4,10 @@
 	<meta charset="UTF-8">
 	<style>
 
-.area {
+.line {
   fill: none;
-  stroke: steelblue;
+  /*stroke: steelblue;*/
+  /*opacity: 0.5;*/
   clip-path: url(#clip);
 }
 
@@ -24,21 +25,42 @@
 	
 </head>
 <body>
+	<div style="height: 330px; width: 1400px;margin:auto;">
+		<div id='svg2' style="float: left;"></div>
+		<div id='svg3' style="float: left;"></div>
+		<div id='svg4' style="float: left;"></div>
+		<div id='svg5' style="float: left;"></div>
+	</div>
 
-	<div style="height: 700px; width: 700px;float: left;">
+	<div style="height: 400px; width: 1400px;margin:auto;">
 		<div id='svg1_wrapper' align="center">
-			<svg id='svg1' width="700" height="500"></svg>
+			<div>
+				<text>smooth:</text> <text id="pull_text" align="center">0</text><input id="pull" type="range" max=1 min=0 value=0 step=0.01>
+				<!-- 边界斥力：<input id="border" type="range" οninput="getVal_border()" οnchange="getVal_border()"> -->
+			</div>
+			<script type="text/javascript">
+				$("#pull").on("change",function(){
+					// console.log(d);
+					d = $("#pull").val();
+					// console.log(Math.ceil(d / 10) * 10);
+					console.log(d)
+					// d = parseFloat(d)
+					// console.log(typeof(d))
+					// console.log(d % 10 * 10);
+					$("#pull_text").text(d);
+					change_smooth(parseFloat(d));
+				})
+			</script>
+			<svg id='svg1' width="1400" height="400"></svg>
 		</div>
 	</div>
 
 
-	<div style="height: 700px; width: 700px;float: right;">
-		<div id='svg2' align="center"></div>
-	</div>
 
 
-	<script src="js/charts.js"></script>
 
-	<script src="js/test_matrix.js"></script>
+	<script src="js/cards.js"></script>
+
+	<script src="js/line.js"></script>
 </body>
 </html>

@@ -1,6 +1,7 @@
 var svg = d3.select("#svg1");
 var margin = {top: 20, right: 20, bottom: 110, left: 40};
-var margin2 = {top: 430, right: 20, bottom: 30, left: 40};
+var margin2 = {top: 330, right: 20, bottom: 30, left: 40};
+var default_opacity = 0.5;
 console.log(svg.attr("width"));
 var width = +svg.attr("width") - margin.left - margin.right,
     height = +svg.attr("height") - margin.top - margin.bottom,
@@ -27,13 +28,13 @@ var zoom = d3.zoom()
     .extent([[0, 0], [width, height]])
     .on("zoom", zoomed);
 
-var area = d3.line()
+var line = d3.line()
     // .interpolate("linear")
     .x(function(d) { return x(new Date(d.date)); })
     .y(function(d) { return y(parseFloat(d.price)); })
     // .curve(d3.curveStep);
 
-var area2 = d3.line()
+var line2 = d3.line()
     // .interpolate("linear")
     .x(function(d) { return x2(new Date(d.date)); })
     .y(function(d) { return y2(parseFloat(d.price)); })
@@ -69,7 +70,7 @@ function brushed() {
   if (d3.event.sourceEvent && d3.event.sourceEvent.type === "zoom") return; // ignore brush-by-zoom
   var s = d3.event.selection || x2.range();
   x.domain(s.map(x2.invert, x2));
-  focus.selectAll(".area").attr("d", area);
+  focus.selectAll(".line").attr("d", line);
   focus.select(".axis--x").call(xAxis);
   svg.select(".zoom").call(zoom.transform, d3.zoomIdentity
       .scale(width / (s[1] - s[0]))
@@ -80,7 +81,7 @@ function zoomed() {
   if (d3.event.sourceEvent && d3.event.sourceEvent.type === "brush") return; // ignore zoom-by-brush
   var t = d3.event.transform;
   x.domain(t.rescaleX(x2).domain());
-  focus.selectAll(".area").attr("d", area);
+  focus.selectAll(".line").attr("d", line);
   focus.select(".axis--x").call(xAxis);
   context.select(".brush").call(brush.move, x.range().map(t.invertX, t));
 }
@@ -92,20 +93,30 @@ function type(d) {
 }
 
 
-function add_data(data, data_index){
+function add_data(data, data_index, color = "steelblue"){
   focus.append("path")
       .attr("id",String(data_index))
       .datum(data)
-      .attr("class", "area")
-      .attr("d", area);
+      .attr("class", "line")
+      .attr("d", line)
+      .attr("opacity",function(){
+        if (remove_city_line.indexOf(data_index) != -1) {
+          return 0;
+        }
+        else
+          return default_opacity;
+      })
+      .attr("stroke",color);
 
   context.append("path")
       .attr("id",String(data_index))
       .datum(data)
-      .attr("class", "area")
-      .attr("d", area2);
+      .attr("class", "line")
+      .attr("d", line2)
+      .attr("opacity",default_opacity)
+      .attr("stroke",color);
 }
-function init_data(data, data_index){
+function init_data(data, data_index, color = "steelblue"){
   x.domain(d3.extent(data, function(d) { return new Date(d.date); }));
 
   y.domain([0, d3.max(data, function(d) { return parseFloat(d.price); })]);
@@ -115,14 +126,18 @@ function init_data(data, data_index){
   focus.append("path")
       .attr("id",String(data_index))
       .datum(data)
-      .attr("class", "area")
-      .attr("d", area);
+      .attr("class", "line")
+      .attr("d", line)
+      .attr("opacity",default_opacity)
+      .attr("stroke",color);
 
   context.append("path")
       .attr("id",String(data_index))
       .datum(data)
-      .attr("class", "area")
-      .attr("d", area2);
+      .attr("class", "line")
+      .attr("d", line2)
+      .attr("opacity",default_opacity)
+      .attr("stroke",color);
 
   focus.append("g")
       .attr("class", "axis axis--x")
@@ -151,21 +166,86 @@ function init_data(data, data_index){
       .call(zoom);
 }
 function remove_data(data_index){
-  context.select("#" + data_index).remove();
-  focus.select("#" + data_index).remove();
+  context.selectAll("#" + data_index).remove();
+  focus.selectAll("#" + data_index).remove();
 }
-
-function main(){
-  d3.csv("data/test_data.csv").then(function(data)  {
-    init_data(data, "line_1");
-  });
-  d3.csv("data/test_data.csv").then(function(data)  {
+function deepclone(obj) {
+  var _obj = JSON.stringify(obj),
+      objClone = JSON.parse(_obj);
+  return objClone;
+}
+function getData(origin_data,smooth = 0,type = "AQI") {
+  console.log(type);
+  if (type == "AQI") {
+    data = deepclone(origin_data);
     for (var i = 0; i < data.length; i++) {
-      data[i].price = data[i].price - 100;
+      data[i].price = data[i].AQI;
     }
-    add_data(data, "line_2");
+    // 加个头，方便显示
+    head = deepclone(data[0]);
+    head.date = new Date(head.date) - 24*60*60*1000;
+    data.unshift(head);
+    // console.log(data);
+    for (var i = 0; i < data.length; i++) {
+      if (data[i].price == 0) {
+        data[i].price = data[i - 1].price;
+      }
+    }
+    var last_v = parseFloat(data[0].price);
+    for (var i = 0; i < data.length; i++) {
+      data[i].price = last_v * smooth + (1 - smooth) * parseFloat(data[i].price);
+      last_v = data[i].price;
+    }
+    return data;
+  }
+  
+}
+function main(smooth = 0){
+  d3.csv("data/beijing.csv").then(function(origin_data)  {
+
+    data = getData(origin_data,smooth);
+
+    init_data(data, "beijing_line","steelblue");
+  });
+
+  d3.csv("data/guangzhou.csv").then(function(origin_data)  {
+    data = getData(origin_data,smooth);
+    add_data(data, "guangzhou_line","purple");
+  });
+
+  d3.csv("data/shanghai.csv").then(function(origin_data)  {
+    data = getData(origin_data,smooth);
+    add_data(data, "shanghai_line","green");
+  });
+  d3.csv("data/haikou.csv").then(function(origin_data)  {
+    data = getData(origin_data,smooth);
+    add_data(data, "haikou_line","orange");
   });
 }
 
 main();
-remove_data("line_1");
+
+function change_smooth(smooth){
+  remove_data("beijing_line");
+  remove_data("guangzhou_line");
+  remove_data("shanghai_line");
+  remove_data("haikou_line");
+  d3.csv("data/beijing.csv").then(function(origin_data)  {
+    data = getData(origin_data,smooth);
+    add_data(data, "beijing_line","steelblue");
+  });
+  d3.csv("data/guangzhou.csv").then(function(origin_data)  {
+    data = getData(origin_data,smooth);
+    add_data(data, "guangzhou_line","purple");
+  });
+
+  d3.csv("data/shanghai.csv").then(function(origin_data)  {
+    data = getData(origin_data,smooth);
+    add_data(data, "shanghai_line","green");
+  });
+  d3.csv("data/haikou.csv").then(function(origin_data)  {
+    data = getData(origin_data,smooth);
+    add_data(data, "haikou_line","orange");
+  });
+
+}
